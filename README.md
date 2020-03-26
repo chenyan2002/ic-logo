@@ -7,8 +7,8 @@ A [Logo](https://en.wikipedia.org/wiki/Logo_(programming_language)) interpreter 
 # Goal
 
 The goal is to explore the following:
-- Customization of Candid UI library
-- Incrmental computation in a less general-purpose setting
+- Customization of Candid UI library; Animation on the Internet Computer
+- Incrmental computation with different requirements from SAC/Adapton, e.g. Output delta result (no in-place update); Focus on efficient support for collection types; No support for general recursion; No need for memoization
 - Realizing Bret Victor's idea on [Inventing on Principle](https://vimeo.com/36579366)
 
-So yes, the prefix "ic³" represents these three things: internet computer, incremental computation and interactive computing.
+So yes, the prefix "ic" represents these three things: Internet Computer, Incremental Computation and Interactive Computing.
