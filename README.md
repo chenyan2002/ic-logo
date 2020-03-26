@@ -1,19 +1,12 @@
-# logo
+# ic-logo
 
-Welcome to your new logo project and to the internet computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+A [Logo](https://en.wikipedia.org/wiki/Logo_(programming_language)) interpreter for the [Internet Computer](https://dfinity.org), written in [Motoko](https://dfinity.org/faq/what-is-motoko).
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+# Goal
 
-To learn more before you start working with logo, see the following documentation available online:
+The goal is to explore serveral things:
+- Customization of Candid UI library
+- Incrmental computation in a less general-purpose setting
+- Realizing Bret Victor's [Inventing on Principle](https://vimeo.com/36579366)
 
-- [Quick Start](https://sdk.dfinity.org/developers-guide/quickstart.html)
-- [Developer's Guide](https://sdk.dfinity.org/developers-guide)
-- [Language Reference](https://sdk.dfinity.org/language-guide)
-
-If you want to start working on your project right away, you might want to try the following commands:
-
-```bash
-cd logo/
-dfx help
-dfx config --help
-```
+So yes, the prefix "ic" presents these three things: internet computer, incremental computation and interactive computing.
