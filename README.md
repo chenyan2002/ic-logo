@@ -1,5 +1,7 @@
 # ic-logo
 
+[![Build Status](https://travis-ci.org/chenyan2002/ic-logo.svg?branch=master)](https://travis-ci.org/chenyan2002/ic-logo?branch=master)
+
 A [Logo](https://en.wikipedia.org/wiki/Logo_(programming_language)) interpreter for the [Internet Computer](https://dfinity.org), written in [Motoko](https://dfinity.org/faq/what-is-motoko).
 
 # Goal
