@@ -1,0 +1,18 @@
+.open {
+    margin: 5px;
+}
+.status {
+    display: none;
+}
+.reject {
+    border: 1px solid #cc0000;
+}
+.btn {
+    margin: 5px;
+}
+.argument {
+    border: 1px solid #E5E5E5;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    width: 5em;
+}

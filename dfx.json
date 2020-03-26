@@ -2,9 +2,9 @@
   "canisters": {
     "logo": {
       "frontend": {
-        "entrypoint": "src/logo/public/index.js"
+        "entrypoint": "src/index.js"
       },
-      "main": "src/logo/main.mo"
+      "main": "src/main.mo"
     }
   },
   "defaults": {
