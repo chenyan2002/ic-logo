@@ -125,6 +125,11 @@ actor {
         let env = initEnv();
         E.eval(env, stat);
     };
+    public query func fakeEval(stat:Statement): async ([Object], Int, Int, Int) {
+        let env = initEnv();
+        E.eval(env, stat);
+        (E.objects.toArray(), E.pos.x, E.pos.y, E.pos.dir)        
+    };    
     public func evalExp(exp:Exp): async Int {
         let env = initEnv();
         E.evalExp(env, exp)

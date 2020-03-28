@@ -61,7 +61,8 @@ class Parse extends ic_userlib_1.IDL.Visitor {
         return +v;
     }
     visitNat(t, v) {
-      return +v;
+      return new bignumber_js_1.default(v);
+      //return +v;
     }
     visitFixedInt(t, v) {
         return new bignumber_js_1.default(v);
