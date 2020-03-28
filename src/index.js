@@ -36,8 +36,8 @@ function renderInput(t) {
 
 const N = 600;
 
-async function render(ctx) {
-  const res = await logo.output();
+async function renderCanvas(ctx, res) {
+  //const res = await logo.output();
   const objects = res[0];
   const x = res[1].toNumber();
   const y = res[2].toNumber();
@@ -59,9 +59,9 @@ async function render(ctx) {
   ctx.translate(x,y);
   ctx.rotate(-dir*Math.PI/180);
   ctx.beginPath();
-  ctx.moveTo(-20,-20);
+  ctx.moveTo(-10,-10);
   ctx.lineTo(0,0);
-  ctx.lineTo(-20,20);
+  ctx.lineTo(-10,10);
   ctx.stroke();
   ctx.rotate(dir*Math.PI/180);  
   ctx.translate(-x,-y);
@@ -75,8 +75,19 @@ function parse(inputs, ctx) {
   }
   (async () => {
     await logo.eval(...args);
-    await render(ctx);
-  })();  
+    const res = await logo.output();
+    await renderCanvas(ctx, res);
+  })();
+}
+
+async function fakeParse(inputs, ctx) {
+  const args = inputs.map(arg => arg.parse());
+  const isReject = inputs.some(arg => arg.isRejected());
+  if (isReject) {
+    return;
+  }
+  const res = await logo.fakeEval(...args);
+  await renderCanvas(ctx, res);
 }
 
 function renderUI(func, dom, ctx) {
@@ -89,13 +100,6 @@ function renderUI(func, dom, ctx) {
     input.render(container);
   });
   dom.appendChild(container);
-
-  container = document.createElement('div');
-  container.innerText = 'Interactive mode';
-  const toggle = document.createElement('input');
-  toggle.type = 'checkbox';
-  container.appendChild(toggle);
-  dom.appendChild(container);
   
   dom.appendChild(document.createElement('div'));
   const draw = document.createElement('button');  
@@ -104,6 +108,7 @@ function renderUI(func, dom, ctx) {
   draw.addEventListener('click', () => {
     parse(inputs, ctx);
   });
+  
   dom.appendChild(document.createElement('div'));
   const clear = document.createElement('button');
   clear.innerText = 'Clear';
@@ -111,24 +116,22 @@ function renderUI(func, dom, ctx) {
   clear.addEventListener('click', () => {
     (async () => {
       await logo.eval({home:null});
-      await render(ctx);
+      const res = await logo.output();
+      await renderCanvas(ctx, res);
     })();
   });
 
   // Customize UI
-  async function canvasUpdate() {
-    await logo.eval({home:null});
-    draw.click();
-  }
   UI.Render.prototype.visitType = (t,d) => {
     const input = document.createElement('input');
     input.classList.add('argument');
     input.placeholder = t.display();
-    input.addEventListener('change', canvasUpdate);
+    input.addEventListener('change', () => { fakeParse(inputs, ctx); });
     return UI.inputBox(t, { input });
   };
   UI.Render.prototype.visitNull = (t,d) => {
-    canvasUpdate();
+    // fakeParse needs to be async for this to work most of the time...
+    fakeParse(inputs, ctx);
     return UI.inputBox(t, {});
   };
 }
@@ -140,7 +143,8 @@ async function init() {
   document.body.appendChild(canvas);
 
   const ctx = canvas.getContext('2d');
-  render(ctx);
+  const res = await logo.output();
+  renderCanvas(ctx, res);
   
   const func = logo.__actorInterface()['eval'];
   const div = document.createElement('div');
