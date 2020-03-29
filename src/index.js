@@ -128,7 +128,7 @@ function renderUI(func, dom, ctx) {
       await parse(inputs, ctx, true);
     })().catch(err => {
       console.log("retry");
-      setTimeout(() => { parse(inputs, ctx, true) }, 300);
+      setTimeout(() => { parse(inputs, ctx, true) }, 200);
     });
     return input;
   };
@@ -138,16 +138,22 @@ async function init() {
   const canvas = document.createElement("canvas");
   canvas.width = N;
   canvas.height = N;
-  document.body.appendChild(canvas);
 
+  const left = document.createElement('div');  
   const ctx = canvas.getContext('2d');
   const res = await logo.output();
   renderCanvas(ctx, res);
+  left.appendChild(canvas);
   
-  const func = logo.__actorInterface()['eval'];
-  const div = document.createElement('div');
-  renderUI(func, div, ctx);
-  document.body.appendChild(div);
+  const right = document.createElement('div');
+  const func = logo.__actorInterface()['eval'];  
+  renderUI(func, right, ctx);
+
+  const box = document.createElement('div');
+  box.style.display = 'flex';
+  box.appendChild(left);
+  box.appendChild(right);
+  document.body.appendChild(box);  
 }
 
 init();
