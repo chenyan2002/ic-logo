@@ -66,7 +66,6 @@ class Evaluator() {
         switch stat {
         case (#home) {
                  pos.home();
-                 objects.clear();
              };
         case (#forward(exp)) {
                  let step = evalExp(env, exp);
@@ -121,11 +120,20 @@ func initEnv(): Env {
 
 actor {
     let E = Evaluator();
+    public func clear(): async () {
+        E.pos.home();
+        E.objects.clear();
+    };
     public func eval(stat:Statement): async () {
         let env = initEnv();
         E.eval(env, stat);
     };
-    public func evalExp(exp:Exp): async Int {
+    public query func fakeEval(stat:Statement): async ([Object], Int, Int, Int) {
+        let env = initEnv();
+        E.eval(env, stat);
+        (E.objects.toArray(), E.pos.x, E.pos.y, E.pos.dir)
+    };    
+    public query func evalExp(exp:Exp): async Int {
         let env = initEnv();
         E.evalExp(env, exp)
     };
