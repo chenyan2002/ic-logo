@@ -37,7 +37,6 @@ function renderInput(t) {
 const N = 600;
 
 async function renderCanvas(ctx, res) {
-  //const res = await logo.output();
   const objects = res[0];
   const x = res[1].toNumber();
   const y = res[2].toNumber();
@@ -67,26 +66,19 @@ async function renderCanvas(ctx, res) {
   ctx.translate(-x,-y);
 }
 
-function parse(inputs, ctx) {
+async function parse(inputs, ctx, fake) {
   const args = inputs.map(arg => arg.parse());
   const isReject = inputs.some(arg => arg.isRejected());
   if (isReject) {
     return;
   }
-  (async () => {
+  let res;
+  if (fake) {
+    res = await logo.fakeEval(...args);
+  } else {
     await logo.eval(...args);
-    const res = await logo.output();
-    await renderCanvas(ctx, res);
-  })();
-}
-
-async function fakeParse(inputs, ctx) {
-  const args = inputs.map(arg => arg.parse());
-  const isReject = inputs.some(arg => arg.isRejected());
-  if (isReject) {
-    return;
+    res = await logo.output();
   }
-  const res = await logo.fakeEval(...args);
   await renderCanvas(ctx, res);
 }
 
@@ -106,7 +98,7 @@ function renderUI(func, dom, ctx) {
   draw.innerText = 'Draw';
   dom.appendChild(draw);
   draw.addEventListener('click', () => {
-    parse(inputs, ctx);
+    parse(inputs, ctx, false);
   });
   
   dom.appendChild(document.createElement('div'));
@@ -115,7 +107,7 @@ function renderUI(func, dom, ctx) {
   dom.appendChild(clear);
   clear.addEventListener('click', () => {
     (async () => {
-      await logo.eval({home:null});
+      await logo.clear();
       const res = await logo.output();
       await renderCanvas(ctx, res);
     })();
@@ -126,13 +118,19 @@ function renderUI(func, dom, ctx) {
     const input = document.createElement('input');
     input.classList.add('argument');
     input.placeholder = t.display();
-    input.addEventListener('change', () => { fakeParse(inputs, ctx); });
+    input.addEventListener('change', () => { parse(inputs, ctx, true); });
     return UI.inputBox(t, { input });
   };
   UI.Render.prototype.visitNull = (t,d) => {
-    // fakeParse needs to be async for this to work most of the time...
-    fakeParse(inputs, ctx);
-    return UI.inputBox(t, {});
+    const input = UI.inputBox(t, {});
+    // This is a hack to make sure async parse is run after return
+    (async () => {
+      await parse(inputs, ctx, true);
+    })().catch(err => {
+      console.log("retry");
+      setTimeout(() => { parse(inputs, ctx, true) }, 300);
+    });
+    return input;
   };
 }
 
