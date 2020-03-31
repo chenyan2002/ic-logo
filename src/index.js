@@ -2,37 +2,19 @@ import logo from 'ic:canisters/logo';
 import { IDL, UI, UICore } from 'ic:userlib';
 import './logo.css';
 
-function Candid() {
- const Exp = IDL.Rec()
- const List = IDL.Rec()
- const Statement = IDL.Rec()
- List.fill(IDL.Opt(IDL.Record({'Statement': Statement, 'More': List})))
- const Statements = List
- Exp.fill(
-  IDL.Variant({'+': IDL.Record({'e1': Exp, 'e2': Exp}), 'Int': IDL.Int,
-               'Var': IDL.Text}))
- Statement.fill(
-  IDL.Variant({'repeat': IDL.Record({'N': IDL.Nat, 'Block': Statements}),
-   'home': IDL.Null, 'left': IDL.Null, 'block': Statements, 'forward': Exp,
-   'right': IDL.Null}))
- const Coord = IDL.Record({'x': IDL.Int, 'y': IDL.Int})
- const Object =
-  IDL.Variant({'line': IDL.Record({'end': Coord, 'start': Coord})})
- return IDL.Func([Statement], [], []);
-};
-
-class ExpRender extends IDL.Visitor {
-  visitType(t, d) {
-    const input = document.createElement('input');
-    input.classList.add('argument');
-    input.placeholder = t.display();
-    return inputBox(t, { input });
-  }  
-}
-
-function renderInput(t) {
-  return t.accept(new UI.Render(), null);
-}
+class T {};
+T.Exp = IDL.Rec();
+T.List = IDL.Rec();
+T.Statement = IDL.Rec()
+T.List.fill(IDL.Opt(IDL.Record({'_0_': T.Statement, '_1_': T.List})))
+T.Statements = T.List
+T.Exp.fill(
+  IDL.Variant({'Add': IDL.Record({'_0_': T.Exp, '_1_': T.Exp}), 'Int': IDL.Int,
+   'Var': IDL.Text}))
+T.Statement.fill(
+  IDL.Variant({'repeat': IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}),
+               'home': IDL.Null, 'left': IDL.Null, 'forward': T.Exp, 'right': IDL.Null}))
+T.type = IDL.Func([T.Statement], [], []);
 
 const N = 600;
 
@@ -87,7 +69,7 @@ function renderUI(func, dom, ctx) {
   
   let container = document.createElement('div');
   func.argTypes.forEach(arg => {
-    const input = renderInput(arg);
+    const input = UI.renderInput(arg);
     inputs.push(input);
     input.render(container);
   });
@@ -114,11 +96,32 @@ function renderUI(func, dom, ctx) {
   });
 
   // Customize UI
-  UI.Render.prototype.visitType = (t,d) => {
+  UI.Render.prototype.visitNumber = (t,d) => {
     const input = document.createElement('input');
+    input.type = 'number';
     input.classList.add('argument');
     input.placeholder = t.display();
     input.addEventListener('change', () => { parse(inputs, ctx, true); });
+    // This slide is for Bret Victor's UI
+    const slide = document.createElement('input');
+    slide.type = 'range';
+    slide.style.position = 'relative';
+    slide.style.left = '-8em';
+    slide.style.top = '-10px';
+    slide.addEventListener('input', () => {
+      input.value = slide.value;
+      parse(inputs, ctx, true);
+    });
+    input.addEventListener('focus', () => {
+      if (input.value !== '') {
+        input.parentElement.appendChild(slide);
+        slide.value = +input.value;
+      }
+    });
+    input.addEventListener('blur', () => {
+      slide.parentElement.removeChild(slide);
+    });
+    
     return UI.inputBox(t, { input });
   };
   UI.Render.prototype.visitNull = (t,d) => {
@@ -132,7 +135,55 @@ function renderUI(func, dom, ctx) {
     });
     return input;
   };
+  UI.Render.prototype.visitRecord = (t, fields, d) => {
+    let config = {};
+    if (t.name === IDL.Record({'_0_': T.Statement, '_1_': T.List}).name) {
+      // List/Statements
+      config['labelMap'] = {'_0_': '', '_1_': '+'};
+      const container = document.createElement('div');
+      if (UI.Render.prototype.visitRecord.isIndent) {
+        container.style['padding-left'] = '1em';
+        UI.Render.prototype.visitRecord.isIndent = false;
+      }
+      config['container'] = container;
+    } else if (t.name === IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}).name) {
+      // Repeat
+      config['labelMap'] = {'_0_': 'step', '_1_': ''};
+      UI.Render.prototype.visitRecord.isIndent = true;
+    } else {
+      if (fields.length > 1) {
+        const container = document.createElement('div');
+        container.classList.add('popup-form');
+        config['container'] = container;
+      }
+    }
+    const form = UI.recordForm(fields, config);
+    return UI.inputBox(t, { form });
+  };
+  UI.Render.prototype.visitVariant = (t, fields, d) => {
+    const select = document.createElement('select');
+    for (const [key, type] of fields) {
+      const option = document.createElement('option');
+      option.innerText = key;
+      select.appendChild(option);
+    }
+    select.selectedIndex = -1;
+    select.classList.add('open');
+    let config = { open: select, event: 'change' };
+    const form = UI.variantForm(fields, config);
+    return UI.inputBox(t, { form });
+  }
 }
+
+class ExpRender extends IDL.Visitor {
+  visitType(t, d) {
+    const input = document.createElement('input');
+    input.classList.add('argument');
+    input.placeholder = t.display();
+    return inputBox(t, { input });
+  }
+}
+
 
 async function init() {
   const canvas = document.createElement("canvas");
@@ -146,7 +197,7 @@ async function init() {
   left.appendChild(canvas);
   
   const right = document.createElement('div');
-  const func = logo.__actorInterface()['eval'];  
+  const func = T.type; //logo.__actorInterface()['eval'];  
   renderUI(func, right, ctx);
 
   const box = document.createElement('div');

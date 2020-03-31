@@ -16,7 +16,6 @@ type Statement = {
     #left;
     #right;
     #home;
-    #block: Statements;
     #repeat: (Nat, Statements);
 };
 
@@ -61,7 +60,7 @@ class Turtle () {
 
 class Evaluator() {
     public let objects : B.Buf<Object> = B.Buf(10);
-    public var pos : Turtle = Turtle();
+    public let pos : Turtle = Turtle();
     public func eval(env:Env, stat:Statement) {
         switch stat {
         case (#home) {
@@ -82,13 +81,10 @@ class Evaluator() {
         case (#left) {
                  pos.turn(-90);
              };
-        case (#block(list)) {
-                 List.iter<Statement>(list, func (s:Statement) { eval(env, s) });
-             };
         case (#repeat(n, block)) {
                  var i = 0;
                  while (i < n) {
-                     eval(env, #block block);
+                     List.iter<Statement>(block, func (s:Statement) { eval(env, s) });
                      i += 1;
                  };
              };
@@ -132,7 +128,7 @@ actor {
         let env = initEnv();
         E.eval(env, stat);
         (E.objects.toArray(), E.pos.x, E.pos.y, E.pos.dir)
-    };    
+    };
     public query func evalExp(exp:Exp): async Int {
         let env = initEnv();
         E.evalExp(env, exp)
