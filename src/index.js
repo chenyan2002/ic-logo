@@ -64,9 +64,9 @@ async function parse(inputs, ctx, fake) {
   await renderCanvas(ctx, res);
 }
 
-function renderUI(func, dom, ctx) {
+function renderUI(func, dom, ctx) {  
   const inputs = [];
-  
+
   let container = document.createElement('div');
   func.argTypes.forEach(arg => {
     const input = UI.renderInput(arg);
@@ -102,26 +102,6 @@ function renderUI(func, dom, ctx) {
     input.classList.add('argument');
     input.placeholder = t.display();
     input.addEventListener('change', () => { parse(inputs, ctx, true); });
-    // This slide is for Bret Victor's UI
-    const slide = document.createElement('input');
-    slide.type = 'range';
-    slide.style.position = 'relative';
-    slide.style.left = '-8em';
-    slide.style.top = '-10px';
-    slide.addEventListener('input', () => {
-      input.value = slide.value;
-      parse(inputs, ctx, true);
-    });
-    input.addEventListener('focus', () => {
-      if (input.value !== '') {
-        input.parentElement.appendChild(slide);
-        slide.value = +input.value;
-      }
-    });
-    input.addEventListener('blur', () => {
-      slide.parentElement.removeChild(slide);
-    });
-    
     return UI.inputBox(t, { input });
   };
   UI.Render.prototype.visitNull = (t,d) => {
@@ -161,29 +141,72 @@ function renderUI(func, dom, ctx) {
     return UI.inputBox(t, { form });
   };
   UI.Render.prototype.visitVariant = (t, fields, d) => {
+    if (t.name === IDL.Variant({'Add': IDL.Record({'_0_': T.Exp, '_1_': T.Exp}), 'Int': IDL.Int,
+                                'Var': IDL.Text}).name) {
+      return renderExp(t);
+    }
     const select = document.createElement('select');
+    let config = { open: select, event: 'change' };
     for (const [key, type] of fields) {
-      const option = document.createElement('option');
-      option.innerText = key;
-      select.appendChild(option);
+      let option = new Option(key);
+      if (key === 'forward') {
+        option.text = 'FOWARD';
+        option.value = key;
+      }
+      select.add(option);
     }
     select.selectedIndex = -1;
     select.classList.add('open');
-    let config = { open: select, event: 'change' };
     const form = UI.variantForm(fields, config);
     return UI.inputBox(t, { form });
   }
-}
 
-class ExpRender extends IDL.Visitor {
-  visitType(t, d) {
-    const input = document.createElement('input');
-    input.classList.add('argument');
-    input.placeholder = t.display();
-    return inputBox(t, { input });
+  class ExpRender extends IDL.Visitor {
+    visitType(t, d) {
+      const input = document.createElement('input');
+      input.classList.add('argument');
+      input.placeholder = t.display();
+      input.addEventListener('change', () => { parse(inputs, ctx, true); });
+      // This slide is for Bret Victor's UI
+      const slide = document.createElement('input');
+      slide.type = 'range';
+      slide.style.position = 'relative';
+      slide.style.left = '-8em';
+      slide.style.top = '-10px';
+      slide.addEventListener('input', () => {
+        input.value = slide.value;
+        parse(inputs, ctx, true);
+      });
+      input.addEventListener('focus', () => {
+        if (input.value !== '') {
+          input.parentElement.appendChild(slide);
+          slide.value = +input.value;
+        }
+      });
+      input.addEventListener('blur', () => {
+        slide.parentElement.removeChild(slide);
+      });
+      return UI.inputBox(t, { input, parse: parseExp });
+    }
+  }
+  
+  class ExpParse extends IDL.Visitor {
+    visitType(t, v) {
+      if (/^[0-9]+$/.test(v)) {
+        const number = +v;
+        return { Int: number };
+      } else {
+        return { Var: v };
+      }
+    }
+  }
+  function renderExp(t) {
+    return t.accept(new ExpRender(), null);
+  }
+  function parseExp(t, config, v) {
+    return t.accept(new ExpParse(), v);
   }
 }
-
 
 async function init() {
   const canvas = document.createElement("canvas");
