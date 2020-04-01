@@ -1,5 +1,6 @@
 import logo from 'ic:canisters/logo';
 import { IDL, UI, UICore } from 'ic:userlib';
+import Stats from 'stats.js';
 import './logo.css';
 
 class T {};
@@ -18,6 +19,10 @@ T.type = IDL.Func([T.Statement], [], []);
 
 const N = 600;
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
 async function renderCanvas(ctx, res) {
   const objects = res[0];
   const x = res[1].toNumber();
@@ -26,6 +31,8 @@ async function renderCanvas(ctx, res) {
   ctx.clearRect(0, 0, N, N);
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 2;
+  
+  stats.begin();  
   for (const obj of objects) {
     const start = obj.line.start;
     const end = obj.line.end;
@@ -34,6 +41,7 @@ async function renderCanvas(ctx, res) {
     ctx.lineTo(end.x, end.y);
     ctx.stroke();
   };
+  stats.end();
   
   ctx.strokeStyle = 'green';
   ctx.lineWidth = 4;
@@ -227,7 +235,7 @@ async function init() {
   box.style.display = 'flex';
   box.appendChild(left);
   box.appendChild(right);
-  document.body.appendChild(box);  
+  document.body.appendChild(box);
 }
 
 init();
