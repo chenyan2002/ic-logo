@@ -1,8 +1,11 @@
 tasks:
   - init: npm install && dfx start --background
-  command: dfx build
+    command: dfx build
 image:
   file: .gitpod.Dockerfile
 ports:
   - port: 8080
-  
+
+vscode:
+  extensions:
+    - dfinity-foundation.vscode-motoko@0.2.0:mQSIC9ZHkr0i991VNjeCWw==
