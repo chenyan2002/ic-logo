@@ -1,6 +1,6 @@
 tasks:
   - init: npm install && dfx start --background
-  command: dfx build
+    command: dfx build
 image:
   file: .gitpod.Dockerfile
 ports:
