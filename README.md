@@ -1,6 +1,6 @@
 # ic³-logo
 
-[![Build Status](https://travis-ci.org/chenyan2002/ic-logo.svg?branch=master)](https://travis-ci.org/chenyan2002/ic-logo?branch=master)
+[![Build Status](https://travis-ci.org/chenyan2002/ic-logo.svg?branch=master)](https://travis-ci.org/chenyan2002/ic-logo?branch=master) [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/chenyan2002/ic-logo) 
 
 A [Logo](https://en.wikipedia.org/wiki/Logo_(programming_language)) interpreter for the [Internet Computer](https://dfinity.org), written in [Motoko](https://dfinity.org/faq/what-is-motoko).
 
