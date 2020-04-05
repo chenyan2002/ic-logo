@@ -16,73 +16,85 @@ T.Statement.fill(
                'home': IDL.Null, 'left': IDL.Null, 'forward': T.Exp, 'right': IDL.Null}))
 T.type = IDL.Func([T.Statement], [], []);
 
-  // Customize UI
-UI.Render.prototype.visitNumber = (t,d) => {
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.classList.add('argument');
-  input.placeholder = t.display();
-  input.addEventListener('change', () => { parse(true); });
-  return UI.inputBox(t, { input });
-};
-UI.Render.prototype.visitNull = (t,d) => {
-  const input = UI.inputBox(t, {});
-  // This is a hack to make sure async parse is run after return
-  (async () => {
-    await parse(true);
-  })().catch(err => {
-    console.log("retry");
-    setTimeout(() => { parse(true) }, 200);
-  });
-  return input;
-};
-UI.Render.prototype.visitRec = (t, ty, d) => {
-  if (t === T.Exp) {
-    return renderExp(ty);
+class StatementRender extends IDL.Visitor {
+  visitNumber(t, d) {
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.classList.add('argument');
+    input.placeholder = t.display();
+    input.addEventListener('change', () => { parse(true); });
+    return UI.inputBox(t, { input });
   }
-  return UI.renderInput(ty);
-};
-UI.Render.prototype.visitRecord = (t, fields, d) => {
-  let config = {};
-  if (t.name === IDL.Record({'_0_': T.Statement, '_1_': T.List}).name) {
-    // List/Statements
-    config['labelMap'] = {'_0_': '', '_1_': '+'};
-    const container = document.createElement('div');
-    if (UI.Render.prototype.visitRecord.isIndent) {
-      container.style['padding-left'] = '1em';
-      UI.Render.prototype.visitRecord.isIndent = false;
+  visitNull(t, d) {
+    const input = UI.inputBox(t, {});
+    // This is a hack to make sure async parse is run after return
+    (async () => {
+      await parse(true);
+    })().catch(err => {
+      console.log("retry");
+      setTimeout(() => { parse(true) }, 200);
+    });
+    return input;
+  }
+  visitRec(t, ty, d) {
+    if (t === T.Exp) {
+      return renderExp(ty);
     }
-    config['container'] = container;
-  } else if (t.name === IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}).name) {
-    // Repeat
-    config['labelMap'] = {'_0_': 'step', '_1_': ''};
-    UI.Render.prototype.visitRecord.isIndent = true;
-  } else {
-    if (fields.length > 1) {
+    return renderStatement(ty);    
+  }
+  visitOpt(t, ty, d) {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.classList.add('open');
+    const form = UI.optForm(ty, { open: checkbox, event: 'change', render: renderStatement });
+    return UI.inputBox(t, { form });    
+  }
+  visitRecord(t, fields, d) {
+    let config = { render: renderStatement };
+    if (t.name === IDL.Record({'_0_': T.Statement, '_1_': T.List}).name) {
+      // List/Statements
+      config['labelMap'] = {'_0_': '', '_1_': '+'};
       const container = document.createElement('div');
-      container.classList.add('popup-form');
+      if (StatementRender.prototype.visitRecord.isIndent) {
+        container.style['padding-left'] = '1em';
+        StatementRender.prototype.visitRecord.isIndent = false;
+      }
       config['container'] = container;
+    } else if (t.name === IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}).name) {
+      // Repeat
+      config['labelMap'] = {'_0_': 'step', '_1_': ''};
+      StatementRender.prototype.visitRecord.isIndent = true;
+    } else {
+      if (fields.length > 1) {
+        const container = document.createElement('div');
+        container.classList.add('popup-form');
+        config['container'] = container;
+      }
     }
+    const form = UI.recordForm(fields, config);
+    return UI.inputBox(t, { form });    
   }
-  const form = UI.recordForm(fields, config);
-  return UI.inputBox(t, { form });
-};
-UI.Render.prototype.visitVariant = (t, fields, d) => {
-  const select = document.createElement('select');
-  let config = { open: select, event: 'change' };
-  const labelMap = { 'home': '🏠' };
-  for (const [key, type] of fields) {
-    let option = new Option(key);
-    if (labelMap.hasOwnProperty(key)) {
-      option.text = labelMap[key];
-      option.value = key;
+  visitVariant(t, fields, d) {
+    const select = document.createElement('select');
+    let config = { open: select, event: 'change', render: renderStatement };
+    const labelMap = { 'home': '🏠' };
+    for (const [key, type] of fields) {
+      let option = new Option(key);
+      if (labelMap.hasOwnProperty(key)) {
+        option.text = labelMap[key];
+        option.value = key;
+      }
+      select.add(option);
     }
-    select.add(option);
+    select.selectedIndex = -1;
+    select.classList.add('open');
+    const form = UI.variantForm(fields, config);
+    return UI.inputBox(t, { form });    
   }
-  select.selectedIndex = -1;
-  select.classList.add('open');
-  const form = UI.variantForm(fields, config);
-  return UI.inputBox(t, { form });
+}
+
+export function renderStatement(t) {
+  return t.accept(new StatementRender(), null);  
 }
 
 class ExpRender extends IDL.Visitor {
@@ -108,7 +120,9 @@ class ExpRender extends IDL.Visitor {
       }
     });
     input.addEventListener('blur', () => {
-      slide.parentElement.removeChild(slide);
+      if (slide.parentElement) {
+        slide.parentElement.removeChild(slide);
+      }
     });
     return UI.inputBox(t, { input, parse: parseExp });
   }
@@ -131,7 +145,7 @@ function parseExp(t, config, v) {
   return t.accept(new ExpParse(), v);
 }
 
-export const inputs = [UI.renderInput(T.Statement)];
+export const inputs = [renderStatement(T.Statement)];
 
 // Canvas
 const N = 600;
