@@ -4,7 +4,7 @@ import './logo.css';
 
 function renderUI(dom) {  
   let container = document.createElement('div');
-  UI.inputs[0].render(container);
+  UI.inputs.forEach(arg => arg.render(container));
   dom.appendChild(container);
   
   dom.appendChild(document.createElement('div'));
@@ -12,7 +12,7 @@ function renderUI(dom) {
   draw.innerText = 'Draw';
   dom.appendChild(draw);
   draw.addEventListener('click', () => {
-    UI.parse(UI.inputs, false);
+    UI.parse(false);
   });
   
   dom.appendChild(document.createElement('div'));
@@ -29,6 +29,8 @@ function renderUI(dom) {
 }
 
 async function init() {
+  document.body.appendChild(UI.stats.dom);
+  
   const left = document.createElement('div');  
   left.appendChild(UI.canvas);
   

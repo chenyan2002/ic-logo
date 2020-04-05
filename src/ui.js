@@ -16,125 +16,124 @@ T.Statement.fill(
                'home': IDL.Null, 'left': IDL.Null, 'forward': T.Exp, 'right': IDL.Null}))
 T.type = IDL.Func([T.Statement], [], []);
 
-
-
-
-
   // Customize UI
-  UI.Render.prototype.visitNumber = (t,d) => {
+UI.Render.prototype.visitNumber = (t,d) => {
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.classList.add('argument');
+  input.placeholder = t.display();
+  input.addEventListener('change', () => { parse(true); });
+  return UI.inputBox(t, { input });
+};
+UI.Render.prototype.visitNull = (t,d) => {
+  const input = UI.inputBox(t, {});
+  // This is a hack to make sure async parse is run after return
+  (async () => {
+    await parse(true);
+  })().catch(err => {
+    console.log("retry");
+    setTimeout(() => { parse(true) }, 200);
+  });
+  return input;
+};
+UI.Render.prototype.visitRec = (t, ty, d) => {
+  if (t === T.Exp) {
+    return renderExp(ty);
+  }
+  return UI.renderInput(ty);
+};
+UI.Render.prototype.visitRecord = (t, fields, d) => {
+  let config = {};
+  if (t.name === IDL.Record({'_0_': T.Statement, '_1_': T.List}).name) {
+    // List/Statements
+    config['labelMap'] = {'_0_': '', '_1_': '+'};
+    const container = document.createElement('div');
+    if (UI.Render.prototype.visitRecord.isIndent) {
+      container.style['padding-left'] = '1em';
+      UI.Render.prototype.visitRecord.isIndent = false;
+    }
+    config['container'] = container;
+  } else if (t.name === IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}).name) {
+    // Repeat
+    config['labelMap'] = {'_0_': 'step', '_1_': ''};
+    UI.Render.prototype.visitRecord.isIndent = true;
+  } else {
+    if (fields.length > 1) {
+      const container = document.createElement('div');
+      container.classList.add('popup-form');
+      config['container'] = container;
+    }
+  }
+  const form = UI.recordForm(fields, config);
+  return UI.inputBox(t, { form });
+};
+UI.Render.prototype.visitVariant = (t, fields, d) => {
+  const select = document.createElement('select');
+  let config = { open: select, event: 'change' };
+  const labelMap = { 'home': '🏠' };
+  for (const [key, type] of fields) {
+    let option = new Option(key);
+    if (labelMap.hasOwnProperty(key)) {
+      option.text = labelMap[key];
+      option.value = key;
+    }
+    select.add(option);
+  }
+  select.selectedIndex = -1;
+  select.classList.add('open');
+  const form = UI.variantForm(fields, config);
+  return UI.inputBox(t, { form });
+}
+
+class ExpRender extends IDL.Visitor {
+  visitType(t, d) {
     const input = document.createElement('input');
-    input.type = 'number';
     input.classList.add('argument');
     input.placeholder = t.display();
-    input.addEventListener('change', () => { parse(inputs, true); });
-    return UI.inputBox(t, { input });
-  };
-  UI.Render.prototype.visitNull = (t,d) => {
-    const input = UI.inputBox(t, {});
-    // This is a hack to make sure async parse is run after return
-    (async () => {
-      await parse(inputs, true);
-    })().catch(err => {
-      console.log("retry");
-      setTimeout(() => { parse(inputs, true) }, 200);
+    input.addEventListener('change', () => { parse(true); });
+    // This slide is for Bret Victor's UI
+    const slide = document.createElement('input');
+    slide.type = 'range';
+    slide.style.position = 'relative';
+    slide.style.left = '-8em';
+    slide.style.top = '-10px';
+    slide.addEventListener('input', () => {
+      input.value = slide.value;
+      parse(true);
     });
-    return input;
-  };
-  UI.Render.prototype.visitRecord = (t, fields, d) => {
-    let config = {};
-    if (t.name === IDL.Record({'_0_': T.Statement, '_1_': T.List}).name) {
-      // List/Statements
-      config['labelMap'] = {'_0_': '', '_1_': '+'};
-      const container = document.createElement('div');
-      if (UI.Render.prototype.visitRecord.isIndent) {
-        container.style['padding-left'] = '1em';
-        UI.Render.prototype.visitRecord.isIndent = false;
+    input.addEventListener('focus', () => {
+      if (input.value !== '') {
+        input.parentElement.appendChild(slide);
+        slide.value = +input.value;
       }
-      config['container'] = container;
-    } else if (t.name === IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}).name) {
-      // Repeat
-      config['labelMap'] = {'_0_': 'step', '_1_': ''};
-      UI.Render.prototype.visitRecord.isIndent = true;
-    } else {
-      if (fields.length > 1) {
-        const container = document.createElement('div');
-        container.classList.add('popup-form');
-        config['container'] = container;
-      }
-    }
-    const form = UI.recordForm(fields, config);
-    return UI.inputBox(t, { form });
-  };
-  UI.Render.prototype.visitVariant = (t, fields, d) => {
-    if (t.name === IDL.Variant({'Add': IDL.Record({'_0_': T.Exp, '_1_': T.Exp}), 'Int': IDL.Int,
-                                'Var': IDL.Text}).name) {
-      return renderExp(t);
-    }
-    const select = document.createElement('select');
-    let config = { open: select, event: 'change' };
-    const labelMap = { 'home': '🏠' };
-    for (const [key, type] of fields) {
-      let option = new Option(key);
-      if (labelMap.hasOwnProperty(key)) {
-        option.text = labelMap[key];
-        option.value = key;
-      }
-      select.add(option);
-    }
-    select.selectedIndex = -1;
-    select.classList.add('open');
-    const form = UI.variantForm(fields, config);
-    return UI.inputBox(t, { form });
+    });
+    input.addEventListener('blur', () => {
+      slide.parentElement.removeChild(slide);
+    });
+    return UI.inputBox(t, { input, parse: parseExp });
   }
+}
 
-  class ExpRender extends IDL.Visitor {
-    visitType(t, d) {
-      const input = document.createElement('input');
-      input.classList.add('argument');
-      input.placeholder = t.display();
-      input.addEventListener('change', () => { parse(inputs, true); });
-      // This slide is for Bret Victor's UI
-      const slide = document.createElement('input');
-      slide.type = 'range';
-      slide.style.position = 'relative';
-      slide.style.left = '-8em';
-      slide.style.top = '-10px';
-      slide.addEventListener('input', () => {
-        input.value = slide.value;
-        parse(inputs, true);
-      });
-      input.addEventListener('focus', () => {
-        if (input.value !== '') {
-          input.parentElement.appendChild(slide);
-          slide.value = +input.value;
-        }
-      });
-      input.addEventListener('blur', () => {
-        slide.parentElement.removeChild(slide);
-      });
-      return UI.inputBox(t, { input, parse: parseExp });
+class ExpParse extends IDL.Visitor {
+  visitType(t, v) {
+    if (/^[0-9]+$/.test(v)) {
+      const number = +v;
+      return { Int: number };
+    } else {
+      return { Var: v };
     }
   }
-  
-  class ExpParse extends IDL.Visitor {
-    visitType(t, v) {
-      if (/^[0-9]+$/.test(v)) {
-        const number = +v;
-        return { Int: number };
-      } else {
-        return { Var: v };
-      }
-    }
-  }
-  function renderExp(t) {
-    return t.accept(new ExpRender(), null);
-  }
-  function parseExp(t, config, v) {
-    return t.accept(new ExpParse(), v);
-  }
+}
+function renderExp(t) {
+  return t.accept(new ExpRender(), null);
+}
+function parseExp(t, config, v) {
+  return t.accept(new ExpParse(), v);
+}
 
 export const inputs = [UI.renderInput(T.Statement)];
 
+// Canvas
 const N = 600;
 export const canvas = document.createElement("canvas");
 canvas.id = 'canvas';
@@ -142,9 +141,8 @@ canvas.width = N;
 canvas.height = N;
 const ctx = canvas.getContext('2d');
 
-const stats = new Stats();
+export const stats = new Stats();
 stats.showPanel(0);
-document.body.appendChild(stats.dom);
 
 export async function renderCanvas(res) {
   const objects = res[0];
@@ -179,7 +177,7 @@ export async function renderCanvas(res) {
   ctx.translate(-x,-y);
 }
 
-export async function parse(inputs, fake) {
+export async function parse(fake) {
   const args = inputs.map(arg => arg.parse());
   const isReject = inputs.some(arg => arg.isRejected());
   if (isReject) {
