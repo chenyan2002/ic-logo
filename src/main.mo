@@ -64,7 +64,7 @@ class Evaluator() {
                  let s = { x=pos.x; y=pos.y };
                  let degree = F.fromInt(pos.dir) * F.pi / 180.0;
                  let new_x = pos.x + F.toInt(F.sin(degree) * step);
-                 let new_y = pos.y + F.toInt(F.cos(degree));
+                 let new_y = pos.y + F.toInt(F.cos(degree) * step);
                  let e: Coord = { x=new_x; y=new_y };
                  let line = #line { start=s; end=e };
                  objects.add(line);
