@@ -16,7 +16,7 @@ type Statements = List.List<Statement>;
 type Statement = {
     #forward: Exp;
     #left: Exp;
-    #right;
+    #right: Exp;
     #home;
     #repeat: (Nat, Statements);
 };
@@ -63,15 +63,16 @@ class Evaluator() {
                  let step = F.fromInt(evalExp(env, exp));
                  let s = { x=pos.x; y=pos.y };
                  let degree = F.fromInt(pos.dir) * F.pi / 180.0;
-                 let new_x = pos.x + F.toInt(F.sin(degree) * step);
-                 let new_y = pos.y + F.toInt(F.cos(degree) * step);
+                 let new_x = pos.x + F.toInt(F.cos(degree) * step);
+                 let new_y = pos.y - F.toInt(F.sin(degree) * step);
                  let e: Coord = { x=new_x; y=new_y };
                  let line = #line { start=s; end=e };
                  objects.add(line);
                  pos.setCoord(e);
              };
-        case (#right) {
-                 pos.turn(90);
+        case (#right(exp)) {
+                 let degree = evalExp(env, exp);
+                 pos.turn(degree);
              };
         case (#left(exp)) {
                  let degree = evalExp(env, exp);

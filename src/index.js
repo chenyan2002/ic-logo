@@ -6,9 +6,11 @@ function renderUI(dom) {
   let container = document.createElement('div');
   UI.inputs.forEach(arg => arg.render(container));
   dom.appendChild(container);
+
+  //UI.renderValue(UI.type, UI.inputs[0], { repeat: { _0_:6, _1_:[{_0_:{left:null}, _1_:[]}] } });
   
   dom.appendChild(document.createElement('div'));
-  const draw = document.createElement('button');  
+  const draw = document.createElement('button');
   draw.innerText = 'Draw';
   dom.appendChild(draw);
   draw.addEventListener('click', () => {
