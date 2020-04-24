@@ -5,7 +5,7 @@ import H "mo:stdlib/hashMap";
 import Hash "mo:stdlib/hash";
 import List "mo:stdlib/list";
 import P "mo:stdlib/prelude";
-import a "mo:stdlib/trie";
+import D "mo:stdlib/debug";
 
 let N = 600;
 
@@ -142,9 +142,10 @@ actor {
 
     public func testDiff(): async Diff.ExportTrace<Text> {
         let a = Diff.Collection<Text>(varEq, Hash.hashOfText);
-        let b = a.map(func (x:Text): Text = x#"_" );
         a.insert("a",0); a.insert("b",0);
         a.insert("a",1); a.insert("c",1);
+        D.print(debug_show(a.exportTrace()));
+        let b = a.map(func (x:Text): Text = x#"_" );
         return b.exportTrace();
     };
 };
