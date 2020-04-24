@@ -1,9 +1,11 @@
 import A "mo:stdlib/array";
-import P "mo:stdlib/prelude";
-import List "mo:stdlib/list";
+import B "mo:stdlib/buf";
+import Diff "diff";
 import H "mo:stdlib/hashMap";
 import Hash "mo:stdlib/hash";
-import B "mo:stdlib/buf";
+import List "mo:stdlib/list";
+import P "mo:stdlib/prelude";
+import D "mo:stdlib/debug";
 
 let N = 600;
 
@@ -136,5 +138,14 @@ actor {
     
     public query func output() : async ([Object], Int, Int, Int) {
         (E.objects.toArray(), E.pos.x, E.pos.y, E.pos.dir)
+    };
+
+    public func testDiff(): async Diff.ExportTrace<Text> {
+        let a = Diff.Collection<Text>(varEq, Hash.hashOfText);
+        a.insert("a",0); a.insert("b",0);
+        a.insert("a",1); a.insert("c",1);
+        D.print(debug_show(a.exportTrace()));
+        let b = a.map(func (x:Text): Text = x#"_" );
+        return b.exportTrace();
     };
 };
