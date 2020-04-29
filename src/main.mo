@@ -1,9 +1,9 @@
-import A "mo:stdlib/array";
-import P "mo:stdlib/prelude";
-import List "mo:stdlib/list";
-import H "mo:stdlib/hashMap";
-import Hash "mo:stdlib/hash";
-import B "mo:stdlib/buf";
+import A "mo:base/Array";
+import P "mo:base/Prelude";
+import List "mo:base/List";
+import H "mo:base/HashMap";
+import Hash "mo:base/Hash";
+import B "mo:base/Buf";
 import Prim "mo:prim";
 import F "./float";
 
