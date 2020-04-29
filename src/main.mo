@@ -1,9 +1,11 @@
-import A "mo:stdlib/array";
-import P "mo:stdlib/prelude";
-import List "mo:stdlib/list";
-import H "mo:stdlib/hashMap";
-import Hash "mo:stdlib/hash";
-import B "mo:stdlib/buf";
+import A "mo:base/Array";
+import P "mo:base/Prelude";
+import List "mo:base/List";
+import H "mo:base/HashMap";
+import Hash "mo:base/Hash";
+import B "mo:base/Buf";
+import Prim "mo:prim";
+import F "./float";
 
 let N = 600;
 
@@ -13,8 +15,8 @@ type Statements = List.List<Statement>;
 
 type Statement = {
     #forward: Exp;
-    #left;
-    #right;
+    #left: Exp;
+    #right: Exp;
     #home;
     #repeat: (Nat, Statements);
 };
@@ -41,15 +43,6 @@ class Turtle () {
     public func home() {
         x := 300; y := 300; dir := 90;
     };
-    public func delta(): (Int, Int) {
-        switch dir {
-        case 0 (1,0);
-        case 90 (0,-1);
-        case 180 (-1,0);
-        case 270 (0,1);
-        case _ P.unreachable();
-        }
-    };
     public func setCoord(coord: Coord) {
         x := coord.x; y := coord.y;
     };
@@ -67,19 +60,23 @@ class Evaluator() {
                  pos.home();
              };
         case (#forward(exp)) {
-                 let step = evalExp(env, exp);
-                 let s = { x=pos.x; y=pos.y+0 };
-                 let (dx,dy) = pos.delta();
-                 let e: Coord = { x=pos.x+dx*step; y=pos.y+dy*step };
+                 let step = F.fromInt(evalExp(env, exp));
+                 let s = { x=pos.x; y=pos.y };
+                 let degree = F.fromInt(pos.dir) * F.pi / 180.0;
+                 let new_x = pos.x + F.toInt(F.cos(degree) * step);
+                 let new_y = pos.y - F.toInt(F.sin(degree) * step);
+                 let e: Coord = { x=new_x; y=new_y };
                  let line = #line { start=s; end=e };
                  objects.add(line);
                  pos.setCoord(e);
              };
-        case (#right) {
-                 pos.turn(90);
+        case (#right(exp)) {
+                 let degree = evalExp(env, exp);
+                 pos.turn(degree);
              };
-        case (#left) {
-                 pos.turn(-90);
+        case (#left(exp)) {
+                 let degree = evalExp(env, exp);
+                 pos.turn(-degree);
              };
         case (#repeat(n, block)) {
                  var i = 0;

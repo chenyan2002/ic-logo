@@ -14,7 +14,7 @@ T.Exp.fill(
 T.Statement.fill(
   IDL.Variant({'repeat': IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}),
                'home': IDL.Null, 'left': IDL.Null, 'forward': T.Exp, 'right': IDL.Null}))
-T.type = IDL.Func([T.Statement], [], []);
+export const type = T.Statement;
 
 class StatementRender extends IDL.Visitor {
   visitNumber(t, d) {
@@ -23,6 +23,27 @@ class StatementRender extends IDL.Visitor {
     input.classList.add('argument');
     input.placeholder = t.display();
     input.addEventListener('change', () => { parse(true); });
+    // This slide is for Bret Victor's UI
+    const slide = document.createElement('input');
+    slide.type = 'range';
+    slide.style.position = 'relative';
+    slide.style.left = '-8em';
+    slide.style.top = '-10px';
+    slide.addEventListener('input', () => {
+      input.value = slide.value;
+      parse(true);
+    });
+    input.addEventListener('focus', () => {
+      if (input.value !== '') {
+        input.parentElement.appendChild(slide);
+        slide.value = +input.value;
+      }
+    });
+    input.addEventListener('blur', () => {
+      if (slide.parentElement) {
+        slide.parentElement.removeChild(slide);
+      }
+    });    
     return UI.inputBox(t, { input });
   }
   visitNull(t, d) {
@@ -37,7 +58,7 @@ class StatementRender extends IDL.Visitor {
     return input;
   }
   visitRec(t, ty, d) {
-    if (t === T.Exp) {
+    if (t.name === T.Exp.name) {
       return renderExp(ty);
     }
     return renderStatement(ty);    
@@ -145,7 +166,10 @@ function parseExp(t, config, v) {
   return t.accept(new ExpParse(), v);
 }
 
-export const inputs = [renderStatement(T.Statement)];
+const t_eval = logo.__actorInterface()['eval'];
+//export const inputs = [renderStatement(T.Statement)];
+export const inputs = t_eval.argTypes.map(arg => renderStatement(arg));
+export const renderValue = UI.renderValue;
 
 // Canvas
 const N = 600;
