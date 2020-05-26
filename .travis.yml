@@ -1,6 +1,6 @@
 dist: bionic
 env:
-- DFX_VERSION="0.5.6"
+- DFX_VERSION="0.5.7"
 install:
 - travis_retry wget https://deb.nodesource.com/setup_12.x -O /tmp/install-node.sh
 - sudo sh /tmp/install-node.sh
