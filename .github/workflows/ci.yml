@@ -6,10 +6,10 @@ jobs:
   steps:
   - uses: actions/checkout@v2
   - name: "install dfx"
-      run: |
-        wget https://sdk.dfinity.org/install.sh
-        yes Y | DFX_VERSION=0.6.2 sh install.sh
-        echo "::add-path::/home/runner/bin"
+    run: |
+      wget https://sdk.dfinity.org/install.sh
+      yes Y | DFX_VERSION=0.6.2 sh install.sh
+      echo "::add-path::/home/runner/bin"
   - name: "build"
     run: |
       dfx start --background
