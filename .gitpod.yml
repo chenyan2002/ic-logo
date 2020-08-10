@@ -6,8 +6,8 @@ tasks:
       dfx build
       dfx canister install --all
       ID=$(dfx canister id logo_assets)
-      gp preview $(gp url 8000)/?canisterId=ic:$ID
-  - command: dfx start --clean
+      gp preview $(gp url 8000)/?canisterId=$ID
+  - command: dfx start
     name: replica
     openMode: tab-after
 image:
