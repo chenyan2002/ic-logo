@@ -10,5 +10,5 @@ USER gitpod
 # More information: https://www.gitpod.io/docs/config-docker/
 RUN sudo apt-get -q update \
  && wget https://sdk.dfinity.org/install.sh -O /tmp/install-sdk.sh \
- && sh -c 'yes Y | DFX_VERSION=0.5.7 sh /tmp/install-sdk.sh'
+ && sh -c 'yes Y | DFX_VERSION=0.6.2 sh /tmp/install-sdk.sh'
  
