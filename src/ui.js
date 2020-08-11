@@ -155,9 +155,9 @@ class ExpRender extends IDL.Visitor {
 
 class ExpParse extends IDL.Visitor {
   visitType(t, v) {
-    if (/^[0-9]+$/.test(v)) {
+    if (!isNaN(parseFloat(v)) && isFinite(v)) {
       const number = +v;
-      return { Int: number };
+      return { Num: number };
     } else {
       return { Var: v };
     }
@@ -188,9 +188,9 @@ stats.showPanel(0);
 
 export async function renderCanvas(res) {
   const objects = res[0];
-  const x = res[1].toNumber();
-  const y = res[2].toNumber();
-  const dir = res[3].toNumber();
+  const x = res[1];
+  const y = res[2];
+  const dir = res[3];
   ctx.clearRect(0, 0, N, N);
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 2;
