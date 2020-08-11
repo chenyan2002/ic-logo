@@ -10,7 +10,7 @@ import F "mo:base/Float";
 
 let N = 600;
 
-type Coord = { x: Int; y: Int };
+type Coord = { x: Float; y: Float };
 
 type Statements = List.List<Statement>;
 
@@ -23,32 +23,29 @@ type Statement = {
 };
 
 type Exp = {
-    #Int: Int;
+    #Num: Float;
     #Var: Text;
     #Add: (Exp, Exp);
 };
 
-type Env = H.HashMap<Text, Int>;
-func varEq(v1: Text, v2: Text): Bool {
-    v1 == v2;
-};
+type Env = H.HashMap<Text, Float>;
 
 type Object = {
     #line: { start: Coord; end: Coord };
 };
 
 class Turtle () {
-    public var x : Int = 300;
-    public var y : Int = 300;
-    public var dir : Int = 90;
+    public var x : Float = 300.0;
+    public var y : Float = 300.0;
+    public var dir : Float = 90.0;
     public func home() {
-        x := 300; y := 300; dir := 90;
+        x := 300.0; y := 300.0; dir := 90.0;
     };
     public func setCoord(coord: Coord) {
         x := coord.x; y := coord.y;
     };
-    public func turn(degree: Int) {
-        dir := (dir - degree + 360) % 360;
+    public func turn(degree: Float) {
+        dir := (dir - degree + 360.0) % 360.0;
     };
 };
 
@@ -61,11 +58,11 @@ class Evaluator() {
                  pos.home();
              };
         case (#forward(exp)) {
-                 let step = F.fromInt(evalExp(env, exp));
+                 let step = evalExp(env, exp);
                  let s = { x=pos.x; y=pos.y };
-                 let degree = F.fromInt(pos.dir) * F.pi / 180.0;
-                 let new_x = pos.x + F.toInt(F.nearest(F.cos(degree) * step));
-                 let new_y = pos.y - F.toInt(F.nearest(F.sin(degree) * step));
+                 let degree = pos.dir * F.pi / 180.0;
+                 let new_x = pos.x + F.cos(degree) * step;
+                 let new_y = pos.y - F.sin(degree) * step;
                  let e: Coord = { x=new_x; y=new_y };
                  let line = #line { start=s; end=e };
                  objects.add(line);
@@ -88,14 +85,14 @@ class Evaluator() {
              };
         };
     };
-    public func evalExp(env:Env, exp:Exp): Int {
+    public func evalExp(env:Env, exp:Exp): Float {
         switch exp {
-        case (#Int(int)) {
-                 int
+        case (#Num(num)) {
+                 num
              };
         case (#Var(v)) {
                  switch (env.get(v)) {
-                 case (?int) int;
+                 case (?num) num;
                  case null P.unreachable();
                  };
              };
@@ -107,8 +104,8 @@ class Evaluator() {
 };
 
 func initEnv(): Env {
-    let env = H.HashMap<Text, Int>(1, varEq, Text.hash);
-    env.put("test", 100);
+    let env = H.HashMap<Text, Float>(1, Text.equal, Text.hash);
+    env.put("test", 100.0);
     env;
 };
 
@@ -122,17 +119,17 @@ actor {
         let env = initEnv();
         E.eval(env, stat);
     };
-    public query func fakeEval(stat:Statement): async ([Object], Int, Int, Int) {
+    public query func fakeEval(stat:Statement): async ([Object], Float, Float, Float) {
         let env = initEnv();
         E.eval(env, stat);
         (E.objects.toArray(), E.pos.x, E.pos.y, E.pos.dir)
     };
-    public query func evalExp(exp:Exp): async Int {
+    public query func evalExp(exp:Exp): async Float {
         let env = initEnv();
         E.evalExp(env, exp)
     };
     
-    public query func output() : async ([Object], Int, Int, Int) {
+    public query func output() : async ([Object], Float, Float, Float) {
         (E.objects.toArray(), E.pos.x, E.pos.y, E.pos.dir)
     };
 };
