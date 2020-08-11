@@ -1,20 +1,14 @@
 import logo from 'ic:canisters/logo';
-import { IDL, UI } from 'ic:userlib';
+import { IDL, UI, Actor } from '@dfinity/agent';
 import Stats from 'stats.js';
 
+const service = Object.assign(...Actor.interfaceOf(logo)._fields.map(([key, val]) => ({[key]: val})));
+const t_eval = service['eval'];
 class T {};
-T.Exp = IDL.Rec();
-T.List = IDL.Rec();
-T.Statement = IDL.Rec()
-T.List.fill(IDL.Opt(IDL.Record({'_0_': T.Statement, '_1_': T.List})))
-T.Statements = T.List
-T.Exp.fill(
-  IDL.Variant({'Add': IDL.Record({'_0_': T.Exp, '_1_': T.Exp}), 'Int': IDL.Int,
-   'Var': IDL.Text}))
-T.Statement.fill(
-  IDL.Variant({'repeat': IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}),
-               'home': IDL.Null, 'left': IDL.Null, 'forward': T.Exp, 'right': IDL.Null}))
-export const type = T.Statement;
+T.Statement = t_eval.argTypes[0]._type;
+T.Repeat = T.Statement._fields.find(variant => variant[0] === 'repeat')[1];
+T.List = T.Repeat._components[1]._type._type;
+T.Exp = service['evalExp'].argTypes[0];
 
 class StatementRender extends IDL.Visitor {
   visitNumber(t, d) {
@@ -70,27 +64,37 @@ class StatementRender extends IDL.Visitor {
     const form = UI.optForm(ty, { open: checkbox, event: 'change', render: renderStatement });
     return UI.inputBox(t, { form });    
   }
-  visitRecord(t, fields, d) {
+  visitTuple(t, components, d) {
     let config = { render: renderStatement };
-    if (t.name === IDL.Record({'_0_': T.Statement, '_1_': T.List}).name) {
+    if (t.name === T.List.name) {
       // List/Statements
       config['labelMap'] = {'_0_': '', '_1_': '+'};
       const container = document.createElement('div');
-      if (StatementRender.prototype.visitRecord.isIndent) {
+      if (StatementRender.prototype.visitTuple.isIndent) {
         container.style['padding-left'] = '1em';
-        StatementRender.prototype.visitRecord.isIndent = false;
+        StatementRender.prototype.visitTuple.isIndent = false;
       }
       config['container'] = container;
-    } else if (t.name === IDL.Record({'_0_': IDL.Nat, '_1_': T.Statements}).name) {
+    } else if (t.name === T.Repeat.name) {
       // Repeat
       config['labelMap'] = {'_0_': 'step', '_1_': ''};
-      StatementRender.prototype.visitRecord.isIndent = true;
+      StatementRender.prototype.visitTuple.isIndent = true;
     } else {
-      if (fields.length > 1) {
+      if (components.length > 1) {
         const container = document.createElement('div');
         container.classList.add('popup-form');
         config['container'] = container;
       }
+    }
+    const form = UI.tupleForm(components, config);
+    return UI.inputBox(t, { form });    
+  }
+  visitRecord(t, fields, d) {
+    let config = { render: renderStatement };
+    if (fields.length > 1) {
+      const container = document.createElement('div');
+      container.classList.add('popup-form');
+      config['container'] = container;
     }
     const form = UI.recordForm(fields, config);
     return UI.inputBox(t, { form });    
@@ -166,7 +170,7 @@ function parseExp(t, config, v) {
   return t.accept(new ExpParse(), v);
 }
 
-const t_eval = logo.__actorInterface()['eval'];
+
 //export const inputs = [renderStatement(T.Statement)];
 export const inputs = t_eval.argTypes.map(arg => renderStatement(arg));
 export const renderValue = UI.renderValue;

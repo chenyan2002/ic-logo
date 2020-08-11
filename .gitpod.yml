@@ -1,12 +1,12 @@
 tasks:
-  - init: npm install && pip install crc8
+  - init: npm install
     command: |
       gp await-port 8000
+      dfx canister create --all
       dfx build
       dfx canister install --all
-      ID=$(xxd -u -p canisters/logo/_canister.id)
-      CRC=$(python2 -c "import crc8;h=crc8.crc8();h.update('$ID'.decode('hex'));print(h.hexdigest().upper())")
-      gp preview $(gp url 8000)/?canisterId=ic:$ID$CRC
+      ID=$(dfx canister id logo_assets)
+      gp preview $(gp url 8000)/?canisterId=$ID
   - command: dfx start
     name: replica
     openMode: tab-after

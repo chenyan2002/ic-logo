@@ -1,11 +1,12 @@
 import A "mo:base/Array";
 import P "mo:base/Prelude";
 import List "mo:base/List";
+import Text "mo:base/Text";
 import H "mo:base/HashMap";
 import Hash "mo:base/Hash";
-import B "mo:base/Buf";
+import B "mo:base/Buffer";
 import Prim "mo:prim";
-import F "./float";
+import F "mo:base/Float";
 
 let N = 600;
 
@@ -52,7 +53,7 @@ class Turtle () {
 };
 
 class Evaluator() {
-    public let objects : B.Buf<Object> = B.Buf(10);
+    public let objects : B.Buffer<Object> = B.Buffer(10);
     public let pos : Turtle = Turtle();
     public func eval(env:Env, stat:Statement) {
         switch stat {
@@ -63,8 +64,8 @@ class Evaluator() {
                  let step = F.fromInt(evalExp(env, exp));
                  let s = { x=pos.x; y=pos.y };
                  let degree = F.fromInt(pos.dir) * F.pi / 180.0;
-                 let new_x = pos.x + F.toInt(F.cos(degree) * step);
-                 let new_y = pos.y - F.toInt(F.sin(degree) * step);
+                 let new_x = pos.x + F.toInt(F.nearest(F.cos(degree) * step));
+                 let new_y = pos.y - F.toInt(F.nearest(F.sin(degree) * step));
                  let e: Coord = { x=new_x; y=new_y };
                  let line = #line { start=s; end=e };
                  objects.add(line);
@@ -81,7 +82,7 @@ class Evaluator() {
         case (#repeat(n, block)) {
                  var i = 0;
                  while (i < n) {
-                     List.iter<Statement>(block, func (s:Statement) { eval(env, s) });
+                     List.iterate<Statement>(block, func (s:Statement) { eval(env, s) });
                      i += 1;
                  };
              };
@@ -106,8 +107,8 @@ class Evaluator() {
 };
 
 func initEnv(): Env {
-    let env = H.HashMap<Text, Int>(1, varEq, Hash.hashOfText);
-    ignore (env.set("test", 100));
+    let env = H.HashMap<Text, Int>(1, varEq, Text.hash);
+    env.put("test", 100);
     env;
 };
 

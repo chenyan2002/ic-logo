@@ -1,0 +1,26 @@
+name: "build"
+on: pull_request
+jobs:
+  tests:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '14'
+    - name: "install dfx"
+      run: |
+        wget https://sdk.dfinity.org/install.sh
+        yes Y | DFX_VERSION=0.6.2 sh install.sh
+        echo "::add-path::/home/runner/bin"
+    - name: "prebuild"
+      run: |
+        dfx cache install
+        npm install
+    - name: "build"
+      run: |
+        dfx start --background
+        dfx canister create --all
+        dfx build
+        dfx canister install --all
+        dfx canister call logo output
