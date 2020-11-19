@@ -7,13 +7,13 @@
     "build": "webpack"
   },
   "devDependencies": {
+    "terser-webpack-plugin": "^2.3.8",
     "webpack": "4.41.3",
-    "webpack-cli": "3.3.10",
-    "terser-webpack-plugin": "2.2.2"
+    "webpack-cli": "3.3.10"
   },
   "dependencies": {
+    "@dfinity/agent": "^0.6.14",
     "bignumber.js": "^9.0.0",
-    "@dfinity/agent": "^0.6.2",
     "css-loader": "^3.4.2",
     "stats.js": "^0.17.0",
     "style-loader": "^1.1.3"
